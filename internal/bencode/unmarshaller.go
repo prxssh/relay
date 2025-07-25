@@ -30,19 +30,27 @@ func (u *Unmarshaller) Unmarshal() (any, error) {
 		return nil, err
 	}
 
+	var val any
+	var unmarshalErr error
+
 	switch btype {
 	case byte(bInteger):
-		return u.unmarshalInteger()
+		val, unmarshalErr = u.unmarshalInteger()
 	case byte(bDict):
-		return u.unmarshalDict()
+		val, unmarshalErr = u.unmarshalDict()
 	case byte(bList):
-		return u.unmarshalList()
+		val, unmarshalErr = u.unmarshalList()
 	default:
 		if err := u.r.UnreadByte(); err != nil {
 			return nil, err
 		}
-		return u.unmarshalString()
+		val, unmarshalErr = u.unmarshalString()
 	}
+
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
+	}
+	return val, nil
 }
 
 /////////////// Private ///////////////
@@ -58,10 +66,10 @@ func (u *Unmarshaller) unmarshalString() (string, error) {
 	}
 
 	if size == 0 {
-		return "", errors.New("bencode: empty string")
+		return "", nil
 	}
 
-	if size == 1 {
+	if size < 0 {
 		return "", errors.New(
 			"bencode: invalid string, negative length",
 		)
@@ -76,7 +84,7 @@ func (u *Unmarshaller) unmarshalString() (string, error) {
 }
 
 func (u *Unmarshaller) unmarshalList() ([]any, error) {
-	var list []any
+	list := make([]any, 0)
 
 	for {
 		peek, err := u.r.Peek(1)
@@ -132,7 +140,7 @@ func (u *Unmarshaller) unmarshalDict() (map[string]any, error) {
 func (u *Unmarshaller) readInteger(delim bencodedType) (int64, error) {
 	read, err := u.r.ReadBytes(byte(delim))
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	sint := string(read[:len(read)-1])

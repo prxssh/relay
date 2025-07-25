@@ -35,7 +35,7 @@ func (m *Marshaller) Marshal(v any) error {
 /////////////// Private ///////////////
 
 func (m *Marshaller) marshalInteger(val int64) error {
-	_, err := m.w.Write([]byte("i" + strconv.FormatInt(val, 10)))
+	_, err := m.w.Write([]byte("i" + strconv.FormatInt(val, 10) + "e"))
 	return err
 }
 
