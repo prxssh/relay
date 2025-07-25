@@ -7,15 +7,15 @@ import (
 	"strconv"
 )
 
-type BencodeMarshaller struct {
+type Marshaller struct {
 	w io.Writer
 }
 
-func NewBencodeMarshaller(w io.Writer) *BencodeMarshaller {
-	return &BencodeMarshaller{w: w}
+func NewMarshaller(w io.Writer) *Marshaller {
+	return &Marshaller{w: w}
 }
 
-func (m *BencodeMarshaller) Marshal(v any) error {
+func (m *Marshaller) Marshal(v any) error {
 	switch vt := v.(type) {
 	case int:
 		return m.marshalInteger(int64(vt))
@@ -34,17 +34,17 @@ func (m *BencodeMarshaller) Marshal(v any) error {
 
 /////////////// Private ///////////////
 
-func (m *BencodeMarshaller) marshalInteger(val int64) error {
+func (m *Marshaller) marshalInteger(val int64) error {
 	_, err := m.w.Write([]byte("i" + strconv.FormatInt(val, 10)))
 	return err
 }
 
-func (m *BencodeMarshaller) marshalString(s string) error {
+func (m *Marshaller) marshalString(s string) error {
 	_, err := m.w.Write([]byte(strconv.Itoa(len(s)) + ":" + s))
 	return err
 }
 
-func (m *BencodeMarshaller) marshalList(list []any) error {
+func (m *Marshaller) marshalList(list []any) error {
 	if _, err := m.w.Write([]byte("l")); err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (m *BencodeMarshaller) marshalList(list []any) error {
 	return err
 }
 
-func (m *BencodeMarshaller) marshalDict(dict map[string]any) error {
+func (m *Marshaller) marshalDict(dict map[string]any) error {
 	if _, err := m.w.Write([]byte("d")); err != nil {
 		return err
 	}

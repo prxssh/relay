@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-type BencodeUnmarshaller struct {
+type Unmarshaller struct {
 	r *bufio.Reader
 }
 
@@ -20,11 +20,11 @@ const (
 	bTerminator bencodedType = 'e'
 )
 
-func NewBencodeUnmarshaller(r io.Reader) *BencodeUnmarshaller {
-	return &BencodeUnmarshaller{r: bufio.NewReader(r)}
+func NewUnmarshaller(r io.Reader) *Unmarshaller {
+	return &Unmarshaller{r: bufio.NewReader(r)}
 }
 
-func (u *BencodeUnmarshaller) Unmarshal() (any, error) {
+func (u *Unmarshaller) Unmarshal() (any, error) {
 	btype, err := u.r.ReadByte()
 	if err != nil {
 		return nil, err
@@ -47,11 +47,11 @@ func (u *BencodeUnmarshaller) Unmarshal() (any, error) {
 
 /////////////// Private ///////////////
 
-func (u *BencodeUnmarshaller) unmarshalInteger() (int64, error) {
+func (u *Unmarshaller) unmarshalInteger() (int64, error) {
 	return u.readInteger(bTerminator)
 }
 
-func (u *BencodeUnmarshaller) unmarshalString() (string, error) {
+func (u *Unmarshaller) unmarshalString() (string, error) {
 	size, err := u.readInteger(':')
 	if err != nil {
 		return "", err
@@ -75,7 +75,7 @@ func (u *BencodeUnmarshaller) unmarshalString() (string, error) {
 	return string(buf), nil
 }
 
-func (u *BencodeUnmarshaller) unmarshalList() ([]any, error) {
+func (u *Unmarshaller) unmarshalList() ([]any, error) {
 	var list []any
 
 	for {
@@ -99,7 +99,7 @@ func (u *BencodeUnmarshaller) unmarshalList() ([]any, error) {
 	return list, nil
 }
 
-func (u *BencodeUnmarshaller) unmarshalDict() (map[string]any, error) {
+func (u *Unmarshaller) unmarshalDict() (map[string]any, error) {
 	dict := make(map[string]any)
 
 	for {
@@ -129,7 +129,7 @@ func (u *BencodeUnmarshaller) unmarshalDict() (map[string]any, error) {
 	return dict, nil
 }
 
-func (u *BencodeUnmarshaller) readInteger(delim bencodedType) (int64, error) {
+func (u *Unmarshaller) readInteger(delim bencodedType) (int64, error) {
 	read, err := u.r.ReadBytes(byte(delim))
 	if err != nil {
 		return -1, err
