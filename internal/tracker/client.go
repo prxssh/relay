@@ -51,32 +51,6 @@ type TrackerPeer struct {
 	Port uint16 // port on which this peer is listenting to connections
 }
 
-// Constants for tracker requests and responses to avoid "magic strings".
-const (
-	// Query parameters
-	paramInfoHash   = "info_hash"
-	paramPeerID     = "peer_id"
-	paramPort       = "port"
-	paramUploaded   = "uploaded"
-	paramDownloaded = "downloaded"
-	paramLeft       = "left"
-	paramCompact    = "compact"
-	paramEvent      = "event"
-
-	// Bencode dictionary keys
-	keyFailureReason = "failure reason"
-	keyWarningMsg    = "warning message"
-	keyInterval      = "interval"
-	keyMinInterval   = "min interval"
-	keyTrackerID     = "tracker id"
-	keyComplete      = "complete"
-	keyIncomplete    = "incomplete"
-	keyPeers         = "peers"
-	keyPeerID        = "peer id"
-	keyPeerIP        = "ip"
-	keyPeerPort      = "port"
-)
-
 func NewTrackerClient(announce string) (ITrackerProtocol, error) {
 	u, err := url.Parse(announce)
 	if err != nil {

@@ -20,6 +20,32 @@ type HTTPTrackerClient struct {
 	client      *http.Client
 }
 
+// Constants for tracker requests and responses to avoid "magic strings".
+const (
+	// Query parameters
+	paramInfoHash   = "info_hash"
+	paramPeerID     = "peer_id"
+	paramPort       = "port"
+	paramUploaded   = "uploaded"
+	paramDownloaded = "downloaded"
+	paramLeft       = "left"
+	paramCompact    = "compact"
+	paramEvent      = "event"
+
+	// Bencode dictionary keys
+	keyFailureReason = "failure reason"
+	keyWarningMsg    = "warning message"
+	keyInterval      = "interval"
+	keyMinInterval   = "min interval"
+	keyTrackerID     = "tracker id"
+	keyComplete      = "complete"
+	keyIncomplete    = "incomplete"
+	keyPeers         = "peers"
+	keyPeerID        = "peer id"
+	keyPeerIP        = "ip"
+	keyPeerPort      = "port"
+)
+
 func (c *HTTPTrackerClient) Announce(ctx context.Context, params *AnnounceParams) (*AnnounceResponse, error) {
 	reqURL := c.buildAnnounceURL(params)
 
