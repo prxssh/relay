@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/prxssh/relay/internal/tui"
+)
 
 func main() {
-	fmt.Println("Echo is up and running...")
+	if err := tui.Start(); err != nil {
+		fmt.Println("Error running RELAY: ", err)
+		os.Exit(1)
+	}
 }

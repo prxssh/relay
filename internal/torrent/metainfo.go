@@ -55,8 +55,6 @@ func New(r io.Reader) (*Metainfo, error) {
 	return p.parse()
 }
 
-/////////////// Private ///////////////
-
 func (i *Info) Size() int64 {
 	if len(i.Files) == 0 {
 		return i.Length
@@ -70,6 +68,8 @@ func (i *Info) Size() int64 {
 	return size
 }
 
+/////////////// Private ///////////////
+
 type parser struct {
 	data map[string]any
 }
@@ -82,7 +82,9 @@ func newParser(r io.Reader) (*parser, error) {
 
 	data, ok := unmarshalled.(map[string]any)
 	if !ok {
-		return nil, errors.New("metainfo: top-level is not a dictionary")
+		return nil, errors.New(
+			"metainfo: top-level is not a dictionary",
+		)
 	}
 
 	return &parser{data: data}, nil
@@ -91,7 +93,10 @@ func newParser(r io.Reader) (*parser, error) {
 func (p *parser) parse() (*Metainfo, error) {
 	info, err := p.parseInfo()
 	if err != nil {
-		return nil, fmt.Errorf("metainfo: failed to parse info dict: %w", err)
+		return nil, fmt.Errorf(
+			"metainfo: failed to parse info dict: %w",
+			err,
+		)
 	}
 
 	announceURLs, err := p.parseAnnounce()
@@ -112,7 +117,9 @@ func (p *parser) parse() (*Metainfo, error) {
 func (p *parser) parseInfo() (*Info, error) {
 	infoDict, ok := p.data["info"].(map[string]any)
 	if !ok {
-		return nil, errors.New("'info' key is missing or not a dictionary")
+		return nil, errors.New(
+			"'info' key is missing or not a dictionary",
+		)
 	}
 
 	infoHash, err := calculateSHA1Hash(infoDict)
@@ -124,10 +131,15 @@ func (p *parser) parseInfo() (*Info, error) {
 
 	piecesStr, ok := infoParser.data["pieces"].(string)
 	if !ok {
-		return nil, errors.New("'pieces' key is missing or not a string")
+		return nil, errors.New(
+			"'pieces' key is missing or not a string",
+		)
 	}
 	if len(piecesStr)%sha1.Size != 0 {
-		return nil, fmt.Errorf("invalid pieces length %d", len(piecesStr))
+		return nil, fmt.Errorf(
+			"invalid pieces length %d",
+			len(piecesStr),
+		)
 	}
 	pieces := make([][sha1.Size]byte, len(piecesStr)/sha1.Size)
 	for i := 0; i < len(pieces); i++ {
