@@ -48,7 +48,10 @@ type PeerConnectOpts struct {
 	Pieces   int64
 }
 
-func ConnectToPeers(remotePeers []*tracker.Peer, opts *PeerConnectOpts) ([]*Peer, error) {
+func ConnectToPeers(
+	remotePeers []*tracker.Peer,
+	opts *PeerConnectOpts,
+) ([]*Peer, error) {
 	var wg sync.WaitGroup
 	peerChan := make(chan *Peer, len(remotePeers))
 
@@ -90,7 +93,10 @@ func (p *Peer) Read() (*message, error) {
 
 /////////////// Private ///////////////
 
-func connectToPeer(remotePeer *tracker.Peer, opts *PeerConnectOpts) (*Peer, error) {
+func connectToPeer(
+	remotePeer *tracker.Peer,
+	opts *PeerConnectOpts,
+) (*Peer, error) {
 	addr := fmt.Sprintf("%s:%d", remotePeer.IP, remotePeer.Port)
 	conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
 	if err != nil {

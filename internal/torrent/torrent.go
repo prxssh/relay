@@ -200,7 +200,9 @@ func (p *parser) parseFiles() ([]*File, error) {
 		for i, pth := range rawPath {
 			pathStr, ok := pth.(string)
 			if !ok {
-				return nil, errors.New("file 'path' contains non-string element")
+				return nil, errors.New(
+					"file 'path' contains non-string element",
+				)
 			}
 			path[i] = pathStr
 
@@ -237,7 +239,9 @@ func (p *parser) parseAnnounce() ([]string, error) {
 	}
 
 	if len(urls) == 0 {
-		return nil, errors.New("no trackers found in announce or announce-list")
+		return nil, errors.New(
+			"no trackers found in announce or announce-list",
+		)
 	}
 
 	announceList := make([]string, 0, len(urls))

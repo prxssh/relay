@@ -27,7 +27,10 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{ID: clientID, torrents: make(map[[sha1.Size]byte]*session)}, nil
+	return &Client{
+		ID:       clientID,
+		torrents: make(map[[sha1.Size]byte]*session),
+	}, nil
 }
 
 func (c *Client) AddTorrentFile(path string) (*session, error) {
@@ -57,7 +60,10 @@ func generatePeerID() ([sha1.Size]byte, error) {
 
 	copy(clientID[:], []byte(clientIDPrefix))
 	if _, err := rand.Read(clientID[len(clientIDPrefix):]); err != nil {
-		return [sha1.Size]byte{}, fmt.Errorf("failed generated peer id: %w", err)
+		return [sha1.Size]byte{}, fmt.Errorf(
+			"failed generated peer id: %w",
+			err,
+		)
 	}
 
 	return clientID, nil

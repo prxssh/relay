@@ -46,7 +46,10 @@ const (
 	keyPeerPort      = "port"
 )
 
-func (c *HTTPTrackerClient) Announce(ctx context.Context, params *AnnounceParams) (*AnnounceResponse, error) {
+func (c *HTTPTrackerClient) Announce(
+	ctx context.Context,
+	params *AnnounceParams,
+) (*AnnounceResponse, error) {
 	reqURL := c.buildAnnounceURL(params)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
@@ -62,7 +65,11 @@ func (c *HTTPTrackerClient) Announce(ctx context.Context, params *AnnounceParams
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return nil, fmt.Errorf("tracker returned non-OK status %d: %s", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf(
+			"tracker returned non-OK status %d: %s",
+			resp.StatusCode,
+			string(bodyBytes),
+		)
 	}
 
 	return parseTrackerResponse(resp.Body)
@@ -99,11 +106,17 @@ func (c *HTTPTrackerClient) buildAnnounceURL(params *AnnounceParams) string {
 func parseTrackerResponse(r io.Reader) (*AnnounceResponse, error) {
 	raw, err := bencode.NewUnmarshaller(r).Unmarshal()
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal tracker response: %w", err)
+		return nil, fmt.Errorf(
+			"failed to unmarshal tracker response: %w",
+			err,
+		)
 	}
 	data, ok := raw.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("unexpected response type, expected dictionary, got %T", raw)
+		return nil, fmt.Errorf(
+			"unexpected response type, expected dictionary, got %T",
+			raw,
+		)
 	}
 
 	if failure, ok := data[keyFailureReason].(string); ok {
@@ -125,7 +138,9 @@ func parseTrackerResponse(r io.Reader) (*AnnounceResponse, error) {
 
 	interval, ok := getInt64(keyInterval)
 	if !ok {
-		return nil, fmt.Errorf("tracker response missing or invalid 'interval'")
+		return nil, fmt.Errorf(
+			"tracker response missing or invalid 'interval'",
+		)
 	}
 
 	// Parse optional fields.
@@ -170,7 +185,10 @@ func parsePeers(data map[string]any) ([]*Peer, error) {
 func parseCompactPeers(peerData []byte) ([]*Peer, error) {
 	const peerSize = 6 // 4 bytes for IP, 2 for port.
 	if len(peerData)%peerSize != 0 {
-		return nil, fmt.Errorf("invalid compact peer list length: %d", len(peerData))
+		return nil, fmt.Errorf(
+			"invalid compact peer list length: %d",
+			len(peerData),
+		)
 	}
 
 	numPeers := len(peerData) / peerSize
@@ -179,7 +197,9 @@ func parseCompactPeers(peerData []byte) ([]*Peer, error) {
 	for i := 0; i < len(peerData); i++ {
 		offset := i * peerSize
 		peers[i].IP = net.IP(peerData[offset : offset+4])
-		peers[i].Port = binary.BigEndian.Uint16(peerData[offset+4 : offset+6])
+		peers[i].Port = binary.BigEndian.Uint16(
+			peerData[offset+4 : offset+6],
+		)
 	}
 	return peers, nil
 }
@@ -190,22 +210,36 @@ func parseDictPeers(peerList []any) ([]*Peer, error) {
 	for i, item := range peerList {
 		peerDict, ok := item.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("invalid peer dictionary entry at index %d: got %T", i, item)
+			return nil, fmt.Errorf(
+				"invalid peer dictionary entry at index %d: got %T",
+				i,
+				item,
+			)
 		}
 
 		ipStr, ok := peerDict[keyPeerIP].(string)
 		if !ok {
-			return nil, fmt.Errorf("missing or invalid 'ip' in peer entry at index %d", i)
+			return nil, fmt.Errorf(
+				"missing or invalid 'ip' in peer entry at index %d",
+				i,
+			)
 		}
 
 		portVal, ok := peerDict[keyPeerPort].(int64)
 		if !ok {
-			return nil, fmt.Errorf("missing or invalid 'port' in peer entry at index %d", i)
+			return nil, fmt.Errorf(
+				"missing or invalid 'port' in peer entry at index %d",
+				i,
+			)
 		}
 
 		ip := net.ParseIP(ipStr)
 		if ip == nil {
-			return nil, fmt.Errorf("invalid IP address string '%s' in peer entry at index %d", ipStr, i)
+			return nil, fmt.Errorf(
+				"invalid IP address string '%s' in peer entry at index %d",
+				ipStr,
+				i,
+			)
 		}
 
 		peer := &Peer{

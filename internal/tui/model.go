@@ -83,5 +83,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	screenContent := m.screens[m.activeState].View()
-	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, screenContent)
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		screenContent,
+	)
 }

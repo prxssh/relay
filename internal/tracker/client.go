@@ -12,7 +12,10 @@ import (
 type ITrackerProtocol interface {
 	// Announce sends the client's state to the tracker and returns the
 	// tracker's response
-	Announce(ctx context.Context, params *AnnounceParams) (*AnnounceResponse, error)
+	Announce(
+		ctx context.Context,
+		params *AnnounceParams,
+	) (*AnnounceResponse, error)
 }
 
 type Event string
@@ -70,13 +73,20 @@ type Peer struct {
 func New(announce string) (ITrackerProtocol, error) {
 	u, err := url.Parse(announce)
 	if err != nil {
-		return nil, fmt.Errorf("tracker: invalid announce %q:%w", announce, err)
+		return nil, fmt.Errorf(
+			"tracker: invalid announce %q:%w",
+			announce,
+			err,
+		)
 	}
 
 	switch u.Scheme {
 	case "http", "https":
 		return newHTTPTrackerClient(u)
 	default:
-		return nil, fmt.Errorf("tracker: unsupported tracker protocol %q", u.Scheme)
+		return nil, fmt.Errorf(
+			"tracker: unsupported tracker protocol %q",
+			u.Scheme,
+		)
 	}
 }

@@ -58,7 +58,11 @@ const (
 
 const defaultAnnounceInterval = 30 * time.Minute
 
-func newSession(parentCtx context.Context, clientID [sha1.Size]byte, torrent *torrent.Torrent) (*session, error) {
+func newSession(
+	parentCtx context.Context,
+	clientID [sha1.Size]byte,
+	torrent *torrent.Torrent,
+) (*session, error) {
 	ctx, cancelFunc := context.WithCancel(parentCtx)
 
 	var managedTrackers []*managedTracker
@@ -79,7 +83,7 @@ func newSession(parentCtx context.Context, clientID [sha1.Size]byte, torrent *to
 		return nil, errors.New("failed to initialize any trackers")
 	}
 
-	return &session{
+	session := &session{
 		peerID:     clientID,
 		torrent:    torrent,
 		trackers:   managedTrackers,
@@ -88,18 +92,21 @@ func newSession(parentCtx context.Context, clientID [sha1.Size]byte, torrent *to
 		uploaded:   0,
 		ctx:        ctx,
 		cancelFunc: cancelFunc,
-	}, nil
-}
+	}
+	session.start()
 
-func (s *session) Start() {
-	go s.announceLoop()
-}
-
-func (s *session) Stop() {
-	s.cancelFunc()
+	return session, nil
 }
 
 /////////////// Private ///////////////
+
+func (s *session) start() {
+	go s.announceLoop()
+}
+
+func (s *session) stop() {
+	s.cancelFunc()
+}
 
 func (s *session) announceLoop() {
 	s.broadcastAnnounce(statusStarted)
@@ -109,7 +116,8 @@ func (s *session) announceLoop() {
 		var nextAnnounceTime *time.Time
 		s.mu.Lock()
 		for _, mt := range s.trackers {
-			if !mt.isAnnouncing && (nextAnnounceTime == nil || mt.nextAnnounceTime.Before(*nextAnnounceTime)) {
+			if !mt.isAnnouncing &&
+				(nextAnnounceTime == nil || mt.nextAnnounceTime.Before(*nextAnnounceTime)) {
 				t := mt.nextAnnounceTime
 				nextAnnounceTime = &t
 			}
@@ -131,7 +139,8 @@ func (s *session) announceLoop() {
 			now := time.Now()
 			s.mu.Lock()
 			for _, mt := range s.trackers {
-				if !mt.isAnnouncing && now.After(mt.nextAnnounceTime) {
+				if !mt.isAnnouncing &&
+					now.After(mt.nextAnnounceTime) {
 					mt.isAnnouncing = true
 					go s.announceToTracker(mt, s.status)
 				}
@@ -199,11 +208,12 @@ func (s *session) broadcastAnnounce(event torrentStatus) {
 }
 
 func toTrackerStatus(event torrentStatus) tracker.Event {
-	if event == statusStopped {
+	switch event {
+	case statusStopped:
 		return tracker.EventStopped
-	} else if event == statusCompleted {
+	case statusCompleted:
 		return tracker.EventCompleted
-	} else {
+	default:
 		return tracker.EventStarted
 	}
 }

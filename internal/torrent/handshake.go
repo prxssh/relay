@@ -56,7 +56,10 @@ func readHanshake(r io.Reader) (*handshake, error) {
 	var infoHash, peerID [sha1.Size]byte
 
 	// <pstrlen><pstr><reserved><info_hash><peer_id>
-	copy(infoHash[:], handshakeBuf[pstrlen+szReservedBytes:pstrlen+szReservedBytes+sha1.Size])
+	copy(
+		infoHash[:],
+		handshakeBuf[pstrlen+szReservedBytes:pstrlen+szReservedBytes+sha1.Size],
+	)
 	copy(peerID[:], handshakeBuf[pstrlen+szReservedBytes+sha1.Size:])
 
 	return &handshake{
