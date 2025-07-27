@@ -176,10 +176,10 @@ func parseCompactPeers(peerData []byte) ([]*Peer, error) {
 	numPeers := len(peerData) / peerSize
 	peers := make([]*Peer, 0, numPeers)
 
-	for i := 0; i < len(peerData); i += peerSize {
-		ip := net.IPv4(peerData[i], peerData[i+1], peerData[i+2], peerData[i+3])
-		port := binary.BigEndian.Uint16(peerData[i+4 : i+6])
-		peers = append(peers, &Peer{IP: ip, Port: port})
+	for i := 0; i < len(peerData); i++ {
+		offset := i * peerSize
+		peers[i].IP = net.IP(peerData[offset : offset+4])
+		peers[i].Port = binary.BigEndian.Uint16(peerData[offset+4 : offset+6])
 	}
 	return peers, nil
 }
