@@ -149,12 +149,12 @@ func parseTrackerResponse(r io.Reader) (*AnnounceResponse, error) {
 	}, nil
 }
 
-func parsePeers(data map[string]any) ([]*TrackerPeer, error) {
+func parsePeers(data map[string]any) ([]*Peer, error) {
 	peersData, ok := data[keyPeers]
 	if !ok {
 		// It's common for trackers to omit the 'peers' key if there are none.
 		// Return an empty slice instead of an error.
-		return []*TrackerPeer{}, nil
+		return []*Peer{}, nil
 	}
 
 	switch peers := peersData.(type) {
@@ -167,25 +167,25 @@ func parsePeers(data map[string]any) ([]*TrackerPeer, error) {
 	}
 }
 
-func parseCompactPeers(peerData []byte) ([]*TrackerPeer, error) {
+func parseCompactPeers(peerData []byte) ([]*Peer, error) {
 	const peerSize = 6 // 4 bytes for IP, 2 for port.
 	if len(peerData)%peerSize != 0 {
 		return nil, fmt.Errorf("invalid compact peer list length: %d", len(peerData))
 	}
 
 	numPeers := len(peerData) / peerSize
-	peers := make([]*TrackerPeer, 0, numPeers)
+	peers := make([]*Peer, 0, numPeers)
 
 	for i := 0; i < len(peerData); i += peerSize {
 		ip := net.IPv4(peerData[i], peerData[i+1], peerData[i+2], peerData[i+3])
 		port := binary.BigEndian.Uint16(peerData[i+4 : i+6])
-		peers = append(peers, &TrackerPeer{IP: ip, Port: port})
+		peers = append(peers, &Peer{IP: ip, Port: port})
 	}
 	return peers, nil
 }
 
-func parseDictPeers(peerList []any) ([]*TrackerPeer, error) {
-	peers := make([]*TrackerPeer, 0, len(peerList)) // Pre-allocate slice capacity.
+func parseDictPeers(peerList []any) ([]*Peer, error) {
+	peers := make([]*Peer, 0, len(peerList)) // Pre-allocate slice capacity.
 
 	for i, item := range peerList {
 		peerDict, ok := item.(map[string]any)
@@ -208,7 +208,7 @@ func parseDictPeers(peerList []any) ([]*TrackerPeer, error) {
 			return nil, fmt.Errorf("invalid IP address string '%s' in peer entry at index %d", ipStr, i)
 		}
 
-		peer := &TrackerPeer{
+		peer := &Peer{
 			IP:   ip,
 			Port: uint16(portVal),
 		}

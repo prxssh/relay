@@ -3,6 +3,7 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/prxssh/relay/internal/relay"
 )
 
 const logo = `
@@ -15,8 +16,13 @@ ______ _____ _       _____   __
 `
 
 func Start() error {
-	p := tea.NewProgram(newModel(), tea.WithAltScreen())
-	_, err := p.Run()
+	client, err := relay.NewClient()
+	if err != nil {
+		return err
+	}
+
+	p := tea.NewProgram(newModel(client), tea.WithAltScreen())
+	_, err = p.Run()
 
 	return err
 }
@@ -24,13 +30,14 @@ func Start() error {
 /////////////// Private ///////////////
 
 type model struct {
+	client        *relay.Client
 	screens       map[viewState]screen
 	activeState   viewState
 	theme         theme
 	width, height int
 }
 
-func newModel() model {
+func newModel(client *relay.Client) model {
 	theme := newTheme()
 
 	screens := map[viewState]screen{
@@ -38,6 +45,7 @@ func newModel() model {
 	}
 
 	return model{
+		client:      client,
 		theme:       theme,
 		screens:     screens,
 		activeState: initialState,
