@@ -2,6 +2,7 @@ package relay
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
@@ -10,14 +11,15 @@ import (
 	"github.com/prxssh/relay/internal/torrent"
 )
 
-// Client represents a struct which manages the complete state of of the
-// torrents
+// Client represents a struct which manages the complete state of the torrents.
 type Client struct {
-	ID       [sha1.Size]byte
-	torrents map[[sha1.Size]byte]*torrentSession
+	// Unique 20-byte identifier for this client.
+	ID [sha1.Size]byte
+	// Mapping of a torrent's info hash to its active session.
+	torrents map[[sha1.Size]byte]*session
 }
 
-const clientIDPrefix string = "-RELAY-"
+const clientIDPrefix string = "-RL0001-"
 
 func NewClient() (*Client, error) {
 	clientID, err := generatePeerID()
@@ -25,10 +27,10 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{ID: clientID}, nil
+	return &Client{ID: clientID, torrents: make(map[[sha1.Size]byte]*session)}, nil
 }
 
-func (c *Client) ReadTorrentFromPath(path string) (*torrent.Torrent, error) {
+func (c *Client) AddTorrentFile(path string) (*session, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -39,7 +41,13 @@ func (c *Client) ReadTorrentFromPath(path string) (*torrent.Torrent, error) {
 		return nil, err
 	}
 
-	return torrent, nil
+	session, err := newSession(context.Background(), c.ID, torrent)
+	if err != nil {
+		return nil, err
+	}
+
+	c.torrents[torrent.Info.Hash] = session
+	return session, nil
 }
 
 /////////////// Private /////////////////

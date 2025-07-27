@@ -67,7 +67,7 @@ type Peer struct {
 	Port uint16
 }
 
-func NewTrackerClient(announce string) (ITrackerProtocol, error) {
+func New(announce string) (ITrackerProtocol, error) {
 	u, err := url.Parse(announce)
 	if err != nil {
 		return nil, fmt.Errorf("tracker: invalid announce %q:%w", announce, err)
