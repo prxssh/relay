@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/prxssh/relay/internal/tracker"
+	"github.com/prxssh/relay/internal/utils"
 )
 
 // Peer represents an active, established connection to another BitTorrent
@@ -21,7 +22,7 @@ type Peer struct {
 	conn net.Conn
 	// Represents the pieces that the remote peer has. It's received
 	// immediately after the handshake.
-	bitfield []byte
+	bitfield utils.Bitfield
 	// Tracks the choking and interest status between the client and the peer.
 	state *peerState
 }
@@ -44,6 +45,7 @@ type peerState struct {
 type PeerConnectOpts struct {
 	InfoHash [sha1.Size]byte
 	PeerID   [sha1.Size]byte
+	Pieces   int64
 }
 
 func ConnectToPeers(remotePeers []*tracker.Peer, opts *PeerConnectOpts) ([]*Peer, error) {
@@ -85,9 +87,10 @@ func connectToPeer(remotePeer *tracker.Peer, opts *PeerConnectOpts) (*Peer, erro
 	}
 
 	p := &Peer{
-		Addr:  addr,
-		conn:  conn,
-		state: initialPeerState(),
+		Addr:     addr,
+		conn:     conn,
+		state:    initialPeerState(),
+		bitfield: utils.NewBitfield(int(opts.Pieces)),
 	}
 
 	if err := p.peformHandshake(opts); err != nil {
