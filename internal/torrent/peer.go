@@ -63,6 +63,8 @@ func ConnectToPeers(remotePeers []*tracker.Peer, opts *PeerConnectOpts) ([]*Peer
 				return
 			}
 
+			go peer.Start()
+
 			peerChan <- peer
 		}(remotePeer)
 	}
@@ -75,6 +77,15 @@ func ConnectToPeers(remotePeers []*tracker.Peer, opts *PeerConnectOpts) ([]*Peer
 	}
 
 	return connectedPeers, nil
+}
+
+func (p *Peer) Start() {
+	defer p.conn.Close()
+	p.readMessages()
+}
+
+func (p *Peer) Read() (*message, error) {
+	return unmarshalMessage(p.conn)
 }
 
 /////////////// Private ///////////////
@@ -133,4 +144,50 @@ func (p *Peer) peformHandshake(opts *PeerConnectOpts) error {
 	}
 
 	return nil
+}
+
+func (p *Peer) readMessages() {
+	for {
+		p.conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
+
+		msg, err := p.Read()
+		if err != nil {
+			return
+		}
+
+		if msg == nil { // keep-alive
+			continue
+		}
+
+		switch msg.id {
+		case msgBitfield:
+			p.bitfield = msg.payload
+
+		case msgChoke:
+			p.state.peerChoking = true
+
+		case msgUnchoke:
+			p.state.peerChoking = false
+
+		case msgInterested:
+			p.state.peerInterested = true
+
+		case msgNotInterested:
+			p.state.peerInterested = false
+
+		case msgHave:
+			// do something
+
+		case msgPiece:
+			// do something
+
+		default:
+			// raise error/log
+		}
+	}
+}
+
+func (p *Peer) sendMessage(message *message) error {
+	_, err := p.conn.Write(message.marshal())
+	return err
 }
